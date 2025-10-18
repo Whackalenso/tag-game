@@ -1,11 +1,70 @@
-tileSize = 40;
-gameOver = false;
-winner = "red";
+new p5(); // makes it so that you can access variables like RIGHT_ARROW outside of setup
 
+tileSize = 40;
 counter = 0;
+gameIsOver = false;
+
+const inputs = {
+  red: [68, 83, 65, 87],
+  blue: [RIGHT_ARROW, DOWN_ARROW, LEFT_ARROW, UP_ARROW],
+};
+
+class Player {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.px = x;
+    this.py = y;
+    this.color = color;
+  }
+
+  update() {
+    fill("white");
+    rect(this.px, this.py, tileSize, tileSize);
+    fill(this.color);
+    rect(this.x, this.y, tileSize, tileSize);
+
+    this.px = this.x;
+    this.py = this.y;
+  }
+
+  move() {
+    const keys = inputs[this.color];
+    if (keyCode == keys[0]) {
+      if (get(this.x + tileSize, this.y)[3] != 254) {
+        this.x += tileSize;
+      }
+    }
+    if (keyCode == keys[1]) {
+      if (get(this.x, this.y + tileSize)[3] != 254) {
+        this.y += tileSize;
+      }
+    }
+    if (keyCode == keys[2]) {
+      if (get(this.x - tileSize, this.y)[3] != 254) {
+        this.x -= tileSize;
+      }
+    }
+
+    if (keyCode == keys[3]) {
+      if (get(this.x, this.y - tileSize)[3] != 254) {
+        this.y -= tileSize;
+      }
+    }
+
+    // if moved
+    if (this.x != this.px || this.y != this.py) {
+      redraw(); //redraws faster than waiting for next draw
+      if (this.color == "red") {
+        counter += 1;
+      }
+    }
+  }
+}
 
 function setup() {
   noStroke();
+  noLoop(); // only draws if you specifically call redraw()
 
   createCanvas(windowWidth, windowHeight);
   for (let i = 0; i < Math.floor(windowWidth / tileSize); i++) {
@@ -18,97 +77,40 @@ function setup() {
     }
   }
 
-  x1 = 0;
-  y1 = 0;
-  px1 = x1;
-  py1 = y1;
-  x2 = windowWidth - (windowWidth % tileSize) - tileSize;
-  y2 = windowHeight - (windowHeight % tileSize) - tileSize;
-  px2 = x2;
-  py2 = y2;
+  p1 = new Player(0, 0, "red");
+  p2 = new Player(
+    windowWidth - (windowWidth % tileSize) - tileSize,
+    windowHeight - (windowHeight % tileSize) - tileSize,
+    "blue"
+  );
 }
 
 function draw() {
-  if (gameOver) {
-    textSize(48); // text size
-    textAlign(CENTER); // center text horizontally
-    fill(winner);
-    text(`${winner} wins!`, width / 2, height / 2); // draw text at center
+  if (gameIsOver) {
     return;
   }
-  fill("white");
-  rect(px1, py1, tileSize, tileSize);
-  rect(px2, py2, tileSize, tileSize);
-  px1 = x1;
-  py1 = y1;
-  px2 = x2;
-  py2 = y2;
 
-  fill("red");
-  rect(x1, y1, tileSize, tileSize);
-  fill("blue");
-  rect(x2, y2, tileSize, tileSize);
+  p1.update();
+  p2.update();
 
-  if (get(x1, y1)[2] == 255) {
-    clear();
-    winner = "blue";
-    gameOver = true;
+  if (get(p1.x, p1.y)[2] == 255) {
+    gameOver("blue");
   }
-
   if (counter >= 100) {
-    clear();
-    winner = "red";
-    gameOver = true;
+    gameOver("red");
   }
 }
 
 function keyPressed() {
-  if (keyCode == RIGHT_ARROW) {
-    if (get(x1 + tileSize, y1)[3] != 254) {
-      x1 += tileSize;
-      counter += 1;
-    }
-  }
-  if (keyCode == DOWN_ARROW) {
-    if (get(x1, y1 + tileSize)[3] != 254) {
-      y1 += tileSize;
-      counter += 1;
-    }
-  }
-  if (keyCode == LEFT_ARROW) {
-    if (get(x1 - tileSize, y1)[3] != 254) {
-      x1 -= tileSize;
-      counter += 1;
-    }
-  }
+  p1.move();
+  p2.move();
+}
 
-  if (keyCode == UP_ARROW) {
-    if (get(x1, y1 - tileSize)[3] != 254) {
-      y1 -= tileSize;
-      counter += 1;
-    }
-  }
-
-  if (keyCode == 68) {
-    // D
-    if (get(x2 + tileSize, y2)[3] != 254) {
-      x2 += tileSize;
-    }
-  }
-  if (keyCode == 83) {
-    if (get(x2, y2 + tileSize)[3] != 254) {
-      y2 += tileSize;
-    }
-  }
-  if (keyCode == 65) {
-    if (get(x2 - tileSize, y2)[3] != 254) {
-      x2 -= tileSize;
-    }
-  }
-
-  if (keyCode == 87) {
-    if (get(x2, y2 - tileSize)[3] != 254) {
-      y2 -= tileSize;
-    }
-  }
+function gameOver(color) {
+  clear();
+  textSize(48); // text size
+  textAlign(CENTER); // center text horizontally
+  fill(color);
+  text(`${color} wins!`, width / 2, height / 2);
+  gameIsOver = true;
 }
