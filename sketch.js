@@ -1,6 +1,10 @@
 new p5(); // makes it so that you can access variables like RIGHT_ARROW outside of setup
 
 tileSize = 40;
+tilesX = Math.floor(windowWidth / tileSize);
+tilesY = Math.floor(windowHeight / tileSize);
+tiles = Array.from({ length: tilesY }, () => Array(tilesX).fill(0)); // 0 for empty, 1 for obstacle (players arent stored in this)     tiles[y][x]
+
 counter = 0;
 gameIsOver = false;
 
@@ -20,9 +24,9 @@ class Player {
 
   update() {
     fill("white");
-    rect(this.px, this.py, tileSize, tileSize);
+    rect(this.px * tileSize, this.py * tileSize, tileSize, tileSize);
     fill(this.color);
-    rect(this.x, this.y, tileSize, tileSize);
+    rect(this.x * tileSize, this.y * tileSize, tileSize, tileSize);
 
     this.px = this.x;
     this.py = this.y;
@@ -30,33 +34,32 @@ class Player {
 
   move() {
     const keys = inputs[this.color];
+
+    let dx = 0;
+    let dy = 0;
     if (keyCode == keys[0]) {
-      if (get(this.x + tileSize, this.y)[3] != 254) {
-        this.x += tileSize;
-      }
+      dx += 1;
     }
     if (keyCode == keys[1]) {
-      if (get(this.x, this.y + tileSize)[3] != 254) {
-        this.y += tileSize;
-      }
+      dy += 1;
     }
     if (keyCode == keys[2]) {
-      if (get(this.x - tileSize, this.y)[3] != 254) {
-        this.x -= tileSize;
-      }
+      dx -= 1;
     }
-
     if (keyCode == keys[3]) {
-      if (get(this.x, this.y - tileSize)[3] != 254) {
-        this.y -= tileSize;
-      }
+      dy -= 1;
     }
 
-    // if moved
-    if (this.x != this.px || this.y != this.py) {
-      redraw(); //redraws faster than waiting for next draw
-      if (this.color == "red") {
-        counter += 1;
+    // If moved
+    if (dx || dy) {
+      // Move if empty tile
+      if (tiles[this.y + dy][this.x + dx] == 0) {
+        this.x += dx;
+        this.y += dy;
+        redraw(); // redraws faster than waiting for next draw
+        if (this.color == "red") {
+          counter += 1;
+        }
       }
     }
   }
@@ -67,22 +70,19 @@ function setup() {
   noLoop(); // only draws if you specifically call redraw()
 
   createCanvas(windowWidth, windowHeight);
-  for (let i = 0; i < Math.floor(windowWidth / tileSize); i++) {
-    for (let j = 0; j < Math.floor(windowHeight / tileSize); j++) {
+  for (let i = 0; i < tilesX; i++) {
+    for (let j = 0; j < tilesY; j++) {
       let r = Math.random();
       if (r < 0.25) {
-        fill(0, 0, 0, 254);
+        fill(0, 0, 0, 255);
         rect(i * tileSize, j * tileSize, tileSize, tileSize);
+        tiles[j][i] = 1; // obstacle
       }
     }
   }
 
   p1 = new Player(0, 0, "red");
-  p2 = new Player(
-    windowWidth - (windowWidth % tileSize) - tileSize,
-    windowHeight - (windowHeight % tileSize) - tileSize,
-    "blue"
-  );
+  p2 = new Player(tilesX - 1, tilesY - 1, "blue");
 }
 
 function draw() {
@@ -93,7 +93,7 @@ function draw() {
   p1.update();
   p2.update();
 
-  if (get(p1.x, p1.y)[2] == 255) {
+  if (p1.x == p2.x && p1.y == p2.y) {
     gameOver("blue");
   }
   if (counter >= 100) {
