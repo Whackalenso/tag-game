@@ -5,6 +5,11 @@ tilesX = Math.floor(windowWidth / tileSize);
 tilesY = Math.floor(windowHeight / tileSize);
 tiles = Array.from({ length: tilesY }, () => Array(tilesX).fill(0)); // 0 for empty, 1 for obstacle (players arent stored in this)     tiles[y][x]
 
+// Fit to window (changing the tileSize itself makes weird gaps)
+scaleX = windowWidth / (windowWidth - (windowWidth % tileSize));
+scaleY = windowHeight / (windowHeight - (windowHeight % tileSize));
+document.body.style.transform = `scale(${scaleX}, ${scaleY})`;
+
 counter = 0;
 gameIsOver = false;
 
